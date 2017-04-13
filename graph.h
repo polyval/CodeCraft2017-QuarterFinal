@@ -4,6 +4,7 @@
 
 #include <vector>
 #include <unordered_map>
+#include <ctime>
 
 using namespace std;
 
@@ -62,9 +63,12 @@ public:
 	};
 
 	vector<vector<Edge *>>  adjVec;
+	vector<vector<Edge *>> originAdjVec; // zjw
 
 	int netVNum; //net vertex number
 	int vNum;//graph vertex number
+	int clientNum; // zjw, clients number
+	clock_t startTime = clock(); // zjw
 
 	vector<int> vFlow; //用于计算服务器档次及等价cost
 
@@ -74,8 +78,9 @@ public:
 	int totalDemand;
 
 	unordered_map<int, int> vToClient;
+	vector<int> clientVertexId; // zjw
 	vector<long long> vDeployCost; //服务器在各网络节点的部署成本
-
+	vector<int> clientDemand; // 消费节点的需求带宽, zjw. 
 
 	vector<Server *> servers; //各档次服务器
 	vector<long long> vCost; //节点成本，即服务器在各节点的总费用（服务器成本+部署成本，没部署服务器时，成本为0）
@@ -128,6 +133,11 @@ public:
 	*/
 	void calMinCostMaxFlowWithSuperCost();
 	
+	// zjw
+	void calFlowCostGivenServers(vector<int>& servers, vector<int>& serverTypes);
+
+	// zjw.
+	void setSuperEdgesGivenServers(vector<int>& servers, vector<int>& serverTypes);
 
 	/**
 	* @brief  用于打印路径

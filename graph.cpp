@@ -13,6 +13,7 @@ Graph::Graph(int netVNum, bool hasSuperSource /*= false*/)
 
 	vNum = hasSuperSource ? (netVNum + 2) : (netVNum + 1);
 	adjVec.resize(netVNum + 2);
+	originAdjVec.resize(netVNum); // zjw
 	known.assign(netVNum + 2, false);
 	superEdgeCost.resize(netVNum + 2);
 	vCost.resize(netVNum);
@@ -121,6 +122,36 @@ void Graph::calMinCostMaxFlowWithSuperCost()
 	for (int i = 0; i < netVNum; ++i)
 	{
 		minCost += vCost[i];
+	}
+}
+
+// zjw
+void Graph::calFlowCostGivenServers(vector<int>& servers, vector<int>& serverTypes) {
+	initNetVertexAdj();
+	delSuperEdge();
+	setSuperEdgesGivenServers(servers, serverTypes);
+
+	minCost = 0;
+	maxFlow = 0;
+	unitFlowCost = 0;
+
+	do
+	{
+		known.assign(vNum, false);
+		while (augment(source, INT_MAX) > 0)
+		{
+			known.assign(vNum, false);
+		}
+	} while (relabel());
+}
+
+// zjw
+void Graph::setSuperEdgesGivenServers(vector<int>& servers, vector<int>& serverTypes) {
+	for (int i = 0; i < servers.size(); i++) {
+		int server = servers[i];
+		int serverType = serverTypes[i];
+		int serverCapacity = this->servers[serverType]->cap;
+		insertDirEdge(netVNum + 1, server, serverCapacity, 0);
 	}
 }
 
@@ -346,6 +377,12 @@ Graph::Edge * Graph::insertEdge(int from, int to, int cap, long long cost, bool 
 {
 	Edge * edge = new Edge(from, to, cap, cost, isReturnEdge);
 	adjVec[from].push_back(edge);
+
+	// insert edge to originAdjVec, zjw.
+	if (!edge->isReturnEdge && edge->from < netVNum) {
+		originAdjVec[from].push_back(edge);
+	}
+
 	return edge;
 }
 

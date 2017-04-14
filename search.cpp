@@ -62,6 +62,10 @@ void Search::drop() {
 	int newCost;
 	while (dropIndex < bestServers.size() && ((float)clock() - graph->startTime) / CLOCKS_PER_SEC * 1000.0 < 88500) {
 		int droppedServer = bestServers[dropIndex];
+		if (graph->adjVec[droppedServer].back()->cap > graph->servers[bestServerTypes.back()]->cap) {
+			dropIndex++;
+			continue;
+		}
 		int droppedServerType = bestServerTypes[dropIndex];
 		bestServers.erase(bestServers.begin() + dropIndex);
 		bestServerTypes.erase(bestServerTypes.begin() + dropIndex);

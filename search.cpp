@@ -2,6 +2,7 @@
 #include <algorithm>
 #include <ctime>
 #include <iostream>
+#include <limits.h>
 
 
 void Search::search() {
@@ -28,7 +29,7 @@ void Search::addServerAscent(vector<int>& candidates) {
 	int tempCost = bestCost;
 	
 	int index = 0;
-	while (index < candidates.size() && (clock() - graph->startTime) < 88500) {
+	while (index < candidates.size() && ((float)clock() - graph->startTime) / CLOCKS_PER_SEC * 1000.0 < 88500) {
 		int newServer = candidates[index];
 		index++;
 		if (find(bestServers.begin(), bestServers.end(), newServer) != bestServers.end()) {
@@ -40,12 +41,11 @@ void Search::addServerAscent(vector<int>& candidates) {
 		bestCost = getAllCost(bestServers, bestServerTypes);
 		drop();
 		modifyServerType();
-
 		if (bestCost < tempCost) {
 			tempServers = bestServers;
 			tempCost = bestCost;
 			tempServerTypes = bestServerTypes;
-			cout << "new best servers location by adding neighbor " << newServer;
+			cout << "new best servers location by adding neighbor " << newServer << "\n";
 			cout << "new best cost: " << bestCost << endl;
 			index = 0;
 		}
@@ -60,7 +60,7 @@ void Search::addServerAscent(vector<int>& candidates) {
 void Search::drop() {
 	int dropIndex = 0;
 	int newCost;
-	while (dropIndex < bestServers.size() && (clock() - graph->startTime) < 88500) {
+	while (dropIndex < bestServers.size() && ((float)clock() - graph->startTime) / CLOCKS_PER_SEC * 1000.0 < 88500) {
 		int droppedServer = bestServers[dropIndex];
 		int droppedServerType = bestServerTypes[dropIndex];
 		bestServers.erase(bestServers.begin() + dropIndex);
@@ -105,9 +105,10 @@ void Search::initialize() {
 	for (int i = 0; i < graph->clientNum; i++) {
 		bestServers.push_back(graph->clientVertexId[i]);
 		bestServerTypes.push_back(typeCount - 1);
-		bestCost += graph->servers.back()->cost;
-		bestCost += graph->vDeployCost[graph->clientVertexId[i]];
+		//bestCost += graph->servers.back()->cost;
+		//bestCost += graph->vDeployCost[graph->clientVertexId[i]];
 	}
+	bestCost = getAllCost(bestServers, bestServerTypes);
 }
 
 void Search::initializeNodes() {
@@ -136,10 +137,10 @@ void Search::initializeServerTypes() {
 }
 
 int Search::getAllCost(vector<int>& servers, vector<int>& serverTypes) {
-	//auto start = clock();
+	// auto start = clock();
 	graph->calFlowCostGivenServers(servers, serverTypes);
-	//auto end = clock();
-	//cout << "time" << " : " << end - start << "ms\n";
+	// auto end = clock();
+	// cout << "time" << " : " << (((float)end - start) / CLOCKS_PER_SEC) * 1000.0 << "ms\n";
 	if (graph->maxFlow < graph->totalDemand) {
 		return INT_MAX;
 	}

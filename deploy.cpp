@@ -78,7 +78,7 @@ void deploy_server(char * topo[MAX_EDGE_NUM], int line_num, char * filename)
 	auto begin = clock();
 	search.search();
 	auto end = clock();
-	cout << "time"  << " : " << end - begin << "ms\n";
+	cout << "time"  << " : " << (((float)end - begin) / CLOCKS_PER_SEC * 1000.0) << "ms\n";
 		
 	cout << "maxFlow  " << cdn.maxFlow << "  ALL Demand: " << cdn.totalDemand << endl;
 /*

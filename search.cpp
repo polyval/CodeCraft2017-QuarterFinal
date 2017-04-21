@@ -25,9 +25,8 @@ void Search::search() {
 	firstDrop = false;
 	//reintroduceDroppedServers(droppedServers, serverIndex);
 	// cout << "reintroduce" << ((float)clock() - graph->startTime) / CLOCKS_PER_SEC * 1000.0 << "ms" << endl;
-	addDropped();
+	//addDropped();
 	add();
-	bestCost = modifyServerType(bestServers, bestServerTypes);
 }
 
 void Search::addDropped() {
@@ -76,9 +75,12 @@ void Search::addServerAscent(vector<int>& candidates) {
 		bestServers.push_back(newServer);
 	    bestServerTypes.push_back(initialServerTypes[newServer]);
 		
-		bestCost = drop(bestServers, bestServerTypes);
-		bestCost = modifyServerType(bestServers, bestServerTypes);
-
+		bestCost = getAllCost(bestServers, bestServerTypes);
+		if (bestCost > tempCost) {
+			bestCost = drop(bestServers, bestServerTypes);
+			bestCost = modifyServerType(bestServers, bestServerTypes);
+		}
+		
 		// ----- get actual output----- //
 		/*cout << "actual output: ";
 		for (int server : bestServers) {
@@ -108,7 +110,7 @@ void Search::addServerAscent(vector<int>& candidates) {
 				cout << server << " ";
 			}
 			cout << "new best cost: " << bestCost << endl;
-			index = 0;
+			//index = 0;
 		}
 		else {
 			bestServers = tempServers;
@@ -122,7 +124,7 @@ int Search::drop(vector<int>& servers, vector<int>& serverTypes) {
 	int dropIndex = 0;
 	int newCost;
 	int bestCost = getAllCost(servers, serverTypes);
-
+	int count = 0;
 	while (dropIndex < servers.size() && ((float)clock() - graph->startTime) / CLOCKS_PER_SEC * 1000.0 < 88000) {
 		int droppedServer = servers[dropIndex];
 		if (graph->adjVec[droppedServer].back()->cap > graph->servers[serverTypes.back()]->cap || !isDroppable(droppedServer)) {
@@ -140,11 +142,17 @@ int Search::drop(vector<int>& servers, vector<int>& serverTypes) {
 			if (firstDrop) {
 				droppedServers.push_back(droppedServer);
 			}
+			else {
+				count++;
+			}
 		}
 		else {
 			servers.insert(servers.begin() + dropIndex, droppedServer);
 			serverTypes.insert(serverTypes.begin() + dropIndex, droppedServerType);
 			dropIndex++;
+		}
+		if (count >= 1) {
+			break;
 		}
 	}
 	return bestCost;
@@ -278,10 +286,10 @@ void Search::initializeServerTypes() {
 }
 
 int Search::getAllCost(vector<int>& servers, vector<int>& serverTypes) {
-	// auto start = clock();
+	 //auto start = clock();
 	graph->calFlowCostGivenServers(servers, serverTypes);
-	// auto end = clock();
-	// cout << "time" << " : " << (((float)end - start) / CLOCKS_PER_SEC) * 1000.0 << "ms\n";
+	 //auto end = clock();
+	 //cout << "time" << " : " << (((float)end - start) / CLOCKS_PER_SEC) * 1000.0 << "ms\n";
 	if (graph->maxFlow < graph->totalDemand) {
 		return INT_MAX;
 	}

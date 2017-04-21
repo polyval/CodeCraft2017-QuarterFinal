@@ -69,8 +69,10 @@ public:
 	int vNum;//graph vertex number
 	int clientNum; // zjw, clients number
 	clock_t startTime = clock(); // zjw
+	vector<int> bestServers; // zjw
+	vector<int> bestServerTypes; // zjw
 
-	vector<int> vFlow; //ÓÃÓÚ¼ÆËã·şÎñÆ÷µµ´Î¼°µÈ¼Ûcost
+	vector<int> vFlow; //ç”¨äºè®¡ç®—æœåŠ¡å™¨æ¡£æ¬¡åŠç­‰ä»·cost
 
 
 	long long minCost;
@@ -79,57 +81,57 @@ public:
 
 	unordered_map<int, int> vToClient;
 	vector<int> clientVertexId; // zjw
-	vector<long long> vDeployCost; //·şÎñÆ÷ÔÚ¸÷ÍøÂç½ÚµãµÄ²¿Êğ³É±¾
-	vector<int> clientDemand; // Ïû·Ñ½ÚµãµÄĞèÇó´ø¿í, zjw. 
+	vector<long long> vDeployCost; //æœåŠ¡å™¨åœ¨å„ç½‘ç»œèŠ‚ç‚¹çš„éƒ¨ç½²æˆæœ¬
+	vector<int> clientDemand; // æ¶ˆè´¹èŠ‚ç‚¹çš„éœ€æ±‚å¸¦å®½, zjw. 
 
-	vector<Server *> servers; //¸÷µµ´Î·şÎñÆ÷
-	vector<long long> vCost; //½Úµã³É±¾£¬¼´·şÎñÆ÷ÔÚ¸÷½ÚµãµÄ×Ü·ÑÓÃ£¨·şÎñÆ÷³É±¾+²¿Êğ³É±¾£¬Ã»²¿Êğ·şÎñÆ÷Ê±£¬³É±¾Îª0£©
-	vector<long long> superEdgeCost; //³¬¼¶±ßcost
+	vector<Server *> servers; //å„æ¡£æ¬¡æœåŠ¡å™¨
+	vector<long long> vCost; //èŠ‚ç‚¹æˆæœ¬ï¼Œå³æœåŠ¡å™¨åœ¨å„èŠ‚ç‚¹çš„æ€»è´¹ç”¨ï¼ˆæœåŠ¡å™¨æˆæœ¬+éƒ¨ç½²æˆæœ¬ï¼Œæ²¡éƒ¨ç½²æœåŠ¡å™¨æ—¶ï¼Œæˆæœ¬ä¸º0ï¼‰
+	vector<long long> superEdgeCost; //è¶…çº§è¾¹cost
 
 	/**
-	 * @brief  ÉèÖÃÔ´µã£¬³¬¼¶Ô´ÎªnetVNum + 1
+	 * @brief  è®¾ç½®æºç‚¹ï¼Œè¶…çº§æºä¸ºnetVNum + 1
 	 */
 	void setSource(int source);
 
 	/**
-	* @brief  ÉèÖÃ»ãµã£¬³¬¼¶»ãÎªnetVNum
+	* @brief  è®¾ç½®æ±‡ç‚¹ï¼Œè¶…çº§æ±‡ä¸ºnetVNum
 	*/
 	void setSink(int sink);
 
 	/**
-	 * @brief ÉèÖÃÊÇ·ñÓĞ³¬¼¶Ô´ 
-	 * @param [in] hasSuperSource = true Ê±Ôò´æÔÚ³¬¼¶Ô´£¬·ñÔò²»´æÔÚ      
+	 * @brief è®¾ç½®æ˜¯å¦æœ‰è¶…çº§æº 
+	 * @param [in] hasSuperSource = true æ—¶åˆ™å­˜åœ¨è¶…çº§æºï¼Œå¦åˆ™ä¸å­˜åœ¨      
 	 */
 	void setSuperSource(bool hasSuperSource);
 	
 	/**
-	 * @brief £¨¸ù¾İ·şÎñÆ÷ËùÔÚ½Úµã£©²åÈë³¬¼¶±ß£¨cap = INT_MAX, cost = 0£© 
-	 * @param  [in] nodes: ·şÎñÆ÷ËùÔÚÍøÂç½Úµã
+	 * @brief ï¼ˆæ ¹æ®æœåŠ¡å™¨æ‰€åœ¨èŠ‚ç‚¹ï¼‰æ’å…¥è¶…çº§è¾¹ï¼ˆcap = INT_MAX, cost = 0ï¼‰ 
+	 * @param  [in] nodes: æœåŠ¡å™¨æ‰€åœ¨ç½‘ç»œèŠ‚ç‚¹
 	 */
 	void insertSuperEdge(const vector<int> &nodes);
 
 
 	/**
-	* @brief £¨¸ù¾İ·şÎñÆ÷ËùÔÚ½Úµã£©²åÈë³¬¼¶±ß(capÓÉsuperCapÖ¸¶¨£¬cost = 0)
-	* @param  [in] nodes: ·şÎñÆ÷ËùÔÚÍøÂç½Úµã
-	* @param  [in] superCap: ·şÎñÆ÷×î´óÊä³öÄÜÁ¦
+	* @brief ï¼ˆæ ¹æ®æœåŠ¡å™¨æ‰€åœ¨èŠ‚ç‚¹ï¼‰æ’å…¥è¶…çº§è¾¹(capç”±superCapæŒ‡å®šï¼Œcost = 0)
+	* @param  [in] nodes: æœåŠ¡å™¨æ‰€åœ¨ç½‘ç»œèŠ‚ç‚¹
+	* @param  [in] superCap: æœåŠ¡å™¨æœ€å¤§è¾“å‡ºèƒ½åŠ›
 	*/
 	void insertSuperEdge(const vector<int> &nodes, const vector<long long> &superCap);
 
 
 
 	/**
-	 * @brief  ¼ÆËãÖ»ÓĞÒ»¸öÔ´µÄ×îĞ¡·ÑÓÃºÍ×î´óÁ÷£¬½á¹û±£´æÖÁ³ÉÔ±±äÁ¿minCost¡¢maxFlow    
+	 * @brief  è®¡ç®—åªæœ‰ä¸€ä¸ªæºçš„æœ€å°è´¹ç”¨å’Œæœ€å¤§æµï¼Œç»“æœä¿å­˜è‡³æˆå‘˜å˜é‡minCostã€maxFlow    
 	 */
 	void calMinCostMaxFlowWithOneSource();
 
 	/**
-	* @brief  ¼ÆËã×îĞ¡·ÑÓÃºÍ×î´óÁ÷£¬½á¹û±£´æÖÁ³ÉÔ±±äÁ¿minCost¡¢maxFlow
+	* @brief  è®¡ç®—æœ€å°è´¹ç”¨å’Œæœ€å¤§æµï¼Œç»“æœä¿å­˜è‡³æˆå‘˜å˜é‡minCostã€maxFlow
 	*/
 	void calMinCostMaxFlow();
 
 	/**
-	* @brief  ¼ÆËã³¬¼¶±ßcost¶¯Ì¬¸üĞÂÏÂµÄ×îĞ¡·ÑÓÃºÍ×î´óÁ÷£¬½á¹û±£´æÖÁ³ÉÔ±±äÁ¿minCost¡¢maxFlow
+	* @brief  è®¡ç®—è¶…çº§è¾¹coståŠ¨æ€æ›´æ–°ä¸‹çš„æœ€å°è´¹ç”¨å’Œæœ€å¤§æµï¼Œç»“æœä¿å­˜è‡³æˆå‘˜å˜é‡minCostã€maxFlow
 	*/
 	void calMinCostMaxFlowWithSuperCost();
 	
@@ -140,30 +142,30 @@ public:
 	void setSuperEdgesGivenServers(vector<int>& servers, vector<int>& serverTypes);
 
 	/**
-	* @brief  ÓÃÓÚ´òÓ¡Â·¾¶
-	* @return Â·¾¶×Ö·û´®
+	* @brief  ç”¨äºæ‰“å°è·¯å¾„
+	* @return è·¯å¾„å­—ç¬¦ä¸²
 	*/
 	string printPaths();
 
 
 	/**
-	* @brief  ÓÃÓÚ´òÓ¡Â·¾¶£¬ÓĞ³¬¼¶Ô´ÏÂÊ¹ÓÃ
-	* @return Â·¾¶×Ö·û´®
+	* @brief  ç”¨äºæ‰“å°è·¯å¾„ï¼Œæœ‰è¶…çº§æºä¸‹ä½¿ç”¨
+	* @return è·¯å¾„å­—ç¬¦ä¸²
 	*/
 	vector<int> getServersLocation();
 
 	/**
-	 * @brief  É¾³ı³¬¼¶±ß£¬Ã¿´Î±ä»»³¬¼¶±ßÊ±ĞèÊ¹ÓÃ 
+	 * @brief  åˆ é™¤è¶…çº§è¾¹ï¼Œæ¯æ¬¡å˜æ¢è¶…çº§è¾¹æ—¶éœ€ä½¿ç”¨ 
 	 */
 	void delSuperEdge();
 
 	/**
-	* @brief  ²åÈëÓĞÏò±ß
+	* @brief  æ’å…¥æœ‰å‘è¾¹
 	*/
 	void insertDirEdge(int from, int to, int cap, long long cost);
 
 	/**
-	* @brief  ²åÈëÎŞÏò±ß
+	* @brief  æ’å…¥æ— å‘è¾¹
 	*/
 	void insertUnDirEdge(int from, int to, int cap, long long cost);
 private:
@@ -191,13 +193,13 @@ private:
 	};
 	
 	
-	vector<Path *> paths;  //¸÷¸öÂ·¾¶
+	vector<Path *> paths;  //å„ä¸ªè·¯å¾„
 
 
 	void calPaths();
 
 	void calVFlow();
-	void calVCost();//²¿Êğ³É±¾+µµ´Î³É±¾
+	void calVCost();//éƒ¨ç½²æˆæœ¬+æ¡£æ¬¡æˆæœ¬
 	int dfs(int source, vector<Edge*> &path);
 
 	int decideServer(int flow);

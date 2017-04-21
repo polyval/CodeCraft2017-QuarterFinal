@@ -54,43 +54,46 @@ void deploy_server(char * topo[MAX_EDGE_NUM], int line_num, char * filename)
 		cdn.insertDirEdge(netVId, netVNum, clientDemand, 0);
 		cdn.totalDemand += clientDemand;
 	}
+
+	//----------end of initialize------------//
+
 	cdn.setSink(netVNum);
-
-	//int allFlow = 0;
-	//for (int i = 0; i < netVNum; ++i)
-	//{
-	//	cdn.setSource(i);
-
-	//	auto begin = clock();
-	//	cdn.calMinCostMaxFlowWithOutSuperSource();
-	//	auto end = clock();
-	//	cout << "time" << i << " : " << end - begin << "ms\n";
-	//	allFlow += cdn.maxFlow;
-	//	cout << i << "  "<<cdn.maxFlow <<endl;
-	//}
-
-	
-
 	cdn.setSuperSource(true);
 	cdn.setSource(netVNum + 1);
 
 	Search search(&cdn);
 	auto begin = clock();
 	search.search();
+	
+	for (auto server : search.bestServerTypes) {
+		cout << server << " ";
+	}
+	cout << "\n" << endl;
+
 	auto end = clock();
 	cout << "time"  << " : " << (((float)end - begin) / CLOCKS_PER_SEC * 1000.0) << "ms\n";
-		
+	
+
+	int bestCost = search.modifyServerType(search.bestServers, search.bestServerTypes);
+
+	cdn.bestServers = search.bestServers;
+	cdn.bestServerTypes = search.bestServerTypes;
+	cout << "modify: " << bestCost << endl;
+
+	for (auto server : search.bestServerTypes) {
+		cout << server << " ";
+	}
+	cout << "\n" << endl;
+
 	cout << "maxFlow  " << cdn.maxFlow << "  ALL Demand: " << cdn.totalDemand << endl;
-/*
-		cout << cdn.printPaths().data();*/
-	//cout << "ALL flow: " << flow<< " ALL Demand: " << cdn.totalDemand;
-	//cin.get();
-//	 需要输出的内容
-//////	char * topo_file = (char *)"17\n\n0 8 0 20\n21 8 0 20\n9 11 1 13\n21 22 2 20\n23 22 2 8\n1 3 3 11\n24 3 3 17\n27 3 3 26\n24 3 3 10\n18 17 4 11\n1 19 5 26\n1 16 6 15\n15 13 7 13\n4 5 8 18\n2 25 9 15\n0 7 10 10\n23 24 11 23";
-//
-//
-//
-//	// 直接调用输出文件的方法输出到指定文件中(ps请注意格式的正确性，如果有解，第一行只有一个数据；第二行为空；第三行开始才是具体的数据，数据之间用一个空格分隔开)
-//	//write_result(topo_file, filename);
+
+	// for (auto server : search.bestServerTypes) {
+	// 	cout << server << " ";
+	// }
+	// cout << "\n" << endl;
+	// cout << bestCost << endl;
+	 //char * topo_file = (char *) cdn.printPaths().data();
+	
+	 //write_result(topo_file, filename);
 
 }

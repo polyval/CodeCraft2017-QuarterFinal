@@ -2,6 +2,7 @@
 
 #include <limits.h>
 #include <string>
+#include <algorithm>
 
 #define MIN(a, b) ((a) < (b)) ? (a) : (b)
 
@@ -169,7 +170,7 @@ void Graph::calPaths()
 	}
 }
 
-//¼ÆËã´Ó³¬¼¶Ô´Á÷µ½ÍøÂç½ÚµãµÄÁ÷Á¿
+//è®¡ç®—ä»è¶…çº§æºæµåˆ°ç½‘ç»œèŠ‚ç‚¹çš„æµé‡
 void Graph::calVFlow()
 {
 	for (int i = 0; i < adjVec[source].size(); ++i)
@@ -327,15 +328,15 @@ std::string Graph::printPath(const Path *path)
 	{
 		result += to_string(e) + " ";
 	}
-	result += to_string(vToClient[(*(path->pathNodes))[(*(path->pathNodes)).size() - 1]]) + " " + to_string(path->pathFlow) 
-		    + " "+to_string(decideServer(vFlow[(*(path->pathNodes))[0]]));
+	int client = vToClient[(*(path->pathNodes))[(*(path->pathNodes)).size() - 1]];
+	int server = (*(path->pathNodes))[0];
+	result += to_string(client) + " " + to_string(path->pathFlow) 
+		    + " "+to_string(bestServerTypes[find(bestServers.begin(), bestServers.end(), server) - bestServers.begin()]);
 	return result;
 }
 
 std::string Graph::printPaths()
 {
-	calVFlow();//¸ù¾İÁ÷Á¿Ñ¡Ôñ·şÎñÆ÷µµ´Î
-
 	calPaths();
 
 	string result = to_string(paths.size()) + "\n";
@@ -346,7 +347,7 @@ std::string Graph::printPaths()
 	return result;
 }
 
-//ĞèÔÚinitNetVertexAdj()ºóÊ¹ÓÃ
+//éœ€åœ¨initNetVertexAdj()åä½¿ç”¨
 void Graph::updateSuperSourceAdj()
 {
 	if (hasSuperSource)
@@ -363,7 +364,7 @@ void Graph::updateSuperSourceAdj()
 
 void Graph::initNetVertexAdj()
 {
-	//Ã»¿¼ÂÇÑ¡¶¨·şÎñÆ÷Î»ÖÃÇé¿ö
+	//æ²¡è€ƒè™‘é€‰å®šæœåŠ¡å™¨ä½ç½®æƒ…å†µ
 	for (int i = 0; i <= sink; ++i)
 	{
 		for (int j = 0; j < adjVec[i].size(); ++j)

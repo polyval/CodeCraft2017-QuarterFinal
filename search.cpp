@@ -16,7 +16,7 @@ void Search::search() {
 		serverIndex.insert({bestServers[i], i});
 	}
 	bestCost = drop(bestServers, bestServerTypes);
-	bestCost = modifyServerType(bestServers, bestServerTypes);
+	//bestCost = modifyServerType(bestServers, bestServerTypes);
 	cout << bestCost << endl;
 	for (int server : bestServers) {
 		cout << server << " ";
@@ -63,12 +63,10 @@ void Search::addServerAscent(vector<int>& candidates) {
 	int tempCost = bestCost;
 	
 	int index = 0;
-	// reverse(candidates.begin(), candidates.end());
-	//random_shuffle(candidates.begin(), candidates.end());
+	int nonImprove = 0;
 	while (index < candidates.size() && ((float)clock() - graph->startTime) / CLOCKS_PER_SEC * 1000.0 < 88000) {
 		int newServer = candidates[index];
 		index++;
-		// random_shuffle(candidates.begin(), candidates.end());
 		if (find(bestServers.begin(), bestServers.end(), newServer) != bestServers.end()) {
 			continue;
 		}
@@ -111,11 +109,16 @@ void Search::addServerAscent(vector<int>& candidates) {
 			}
 			cout << "new best cost: " << bestCost << endl;
 			//index = 0;
+			nonImprove = 0;
 		}
 		else {
 			bestServers = tempServers;
 			bestCost = tempCost;
 			bestServerTypes = tempServerTypes;
+			nonImprove++;
+		}
+		if (nonImprove >= 10) {
+			preBreak = false;
 		}
 	}
 }
@@ -124,10 +127,14 @@ int Search::drop(vector<int>& servers, vector<int>& serverTypes) {
 	int dropIndex = 0;
 	int newCost;
 	int bestCost = getAllCost(servers, serverTypes);
-	int count = 0;
+	/*if (!firstDrop) {
+		sortServerAndType(servers, serverTypes);
+		reverse(servers.begin(), servers.end());
+		reverse(serverTypes.begin(), serverTypes.end());
+	}*/
 	while (dropIndex < servers.size() && ((float)clock() - graph->startTime) / CLOCKS_PER_SEC * 1000.0 < 88000) {
 		int droppedServer = servers[dropIndex];
-		if (graph->adjVec[droppedServer].back()->cap > graph->servers[serverTypes.back()]->cap || !isDroppable(droppedServer)) {
+		if (!firstDrop && (graph->adjVec[droppedServer].back()->cap > graph->servers[serverTypes.back()]->cap || !isDroppable(droppedServer))) {
 			dropIndex++;
 			continue;
 		}
@@ -136,23 +143,21 @@ int Search::drop(vector<int>& servers, vector<int>& serverTypes) {
 		serverTypes.erase(serverTypes.begin() + dropIndex);
 
 		newCost = getAllCost(servers, serverTypes);
-		// newCost = modifyServerType(servers, serverTypes);
 		if (newCost <= bestCost) {
 			bestCost = newCost;
 			if (firstDrop) {
 				droppedServers.push_back(droppedServer);
 			}
 			else {
-				count++;
+				if (preBreak) {
+					break;
+				}
 			}
 		}
 		else {
 			servers.insert(servers.begin() + dropIndex, droppedServer);
 			serverTypes.insert(serverTypes.begin() + dropIndex, droppedServerType);
 			dropIndex++;
-		}
-		if (count >= 1) {
-			break;
 		}
 	}
 	return bestCost;
@@ -206,8 +211,10 @@ void Search::reintroduceDroppedServers(vector<int>& droppedServers, unordered_ma
 	}
 }
 
-int Search::modifyServerType(vector<int>& servers, vector<int>& serverTypes) {
-	int cost = getAllCost(servers, serverTypes);
+int Search::modifyServerType(vector<int>& servers, vector<int>& serverTypes, int cost) {
+	if (cost == 0) {
+		cost = getAllCost(servers, serverTypes);
+	}
 	if (cost == INT_MAX) {
 		return INT_MAX;
 	}
@@ -349,8 +356,8 @@ void Search::sortServerAndType(vector<int>& servers, vector<int>& serverTypes) {
 		serverToType.insert({servers[i], serverTypes[i]});
 	}
 	sortServers(bestServers, true);
-	// sortServers(bestServers);
-	// reverse(bestServers.begin(), bestServers.end());
+	/* sortServers(bestServers);
+	 reverse(bestServers.begin(), bestServers.end());*/
 	for (int i = 0; i < servers.size(); i++) {
 		serverTypes[i] = serverToType[servers[i]];
 	}

@@ -50,6 +50,7 @@ private:
 	void add();
 	void addDropped();
 	void addServerAscent(vector<int>& candidates);
+	void sortByActualOutput(vector<int>& servers, vector<int>& serverTypes);
 	int drop(vector<int>& servers, vector<int>& serverTypes);
 	void reintroduceDroppedServers(vector<int>& droppedServers, unordered_map<int, int> serverIndex);
 	int calPotentialOutput(Node*);

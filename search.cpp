@@ -16,7 +16,6 @@ void Search::search() {
 		serverIndex.insert({bestServers[i], i});
 	}
 	bestCost = drop(bestServers, bestServerTypes);
-	//bestCost = modifyServerType(bestServers, bestServerTypes);
 	cout << bestCost << endl;
 	for (int server : bestServers) {
 		cout << server << " ";
@@ -111,7 +110,7 @@ void Search::addServerAscent(vector<int>& candidates) {
 				cout << server << " ";
 			}
 			cout << "new best cost: " << bestCost << endl;
-			index = 0;
+			//index = 0;
 			nonImprove = 0;
 		}
 		else {
@@ -122,12 +121,14 @@ void Search::addServerAscent(vector<int>& candidates) {
 		}
 		if (nonImprove >= 10) {
 			preBreak = false;
+			index = 0;
+			startIndex = 0;
 		}
 	}
 }
 
 int Search::drop(vector<int>& servers, vector<int>& serverTypes) {
-	int dropIndex = 0;
+	int dropIndex = startIndex;
 	int newCost;
 	int bestCost = getAllCost(servers, serverTypes);
 	//if (!firstDrop) {
@@ -136,6 +137,7 @@ int Search::drop(vector<int>& servers, vector<int>& serverTypes) {
 	//	reverse(serverTypes.begin(), serverTypes.end());
 	//	//sortByActualOutput(servers, serverTypes);
 	//}
+	bool changeStart = false;
 	while (dropIndex < servers.size() && ((float)clock() - graph->startTime) / CLOCKS_PER_SEC * 1000.0 < 88000) {
 		int droppedServer = servers[dropIndex];
 		if (!firstDrop && (graph->adjVec[droppedServer].back()->cap > graph->servers[serverTypes.back()]->cap || !isDroppable(droppedServer))) {
@@ -153,6 +155,10 @@ int Search::drop(vector<int>& servers, vector<int>& serverTypes) {
 				droppedServers.push_back(droppedServer);
 			}
 			else {
+				if (!changeStart) {
+					startIndex = dropIndex;
+					changeStart = true;
+				}
 				if (preBreak && graph->netVNum > 800) {
 					break;
 				}
@@ -360,7 +366,7 @@ void Search::sortServerAndType(vector<int>& servers, vector<int>& serverTypes) {
 		serverToType.insert({servers[i], serverTypes[i]});
 	}
 	sortServers(bestServers, true);
-	/* sortServers(bestServers);
+	 /*sortServers(bestServers);
 	 reverse(bestServers.begin(), bestServers.end());*/
 	for (int i = 0; i < servers.size(); i++) {
 		serverTypes[i] = serverToType[servers[i]];

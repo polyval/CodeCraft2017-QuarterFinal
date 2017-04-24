@@ -38,7 +38,7 @@ public:
 private:
 	int typeCount;
 	int bestCost;
-	
+	int startIndex = 0;
 	vector<int> initialServerTypes;
 	vector<Node*> nodes;
 	vector<int> droppedServers;

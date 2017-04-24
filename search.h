@@ -57,7 +57,7 @@ private:
 	vector<int> getAllVertices();
 	bool isDroppable(int server);
 	void sortServers(vector<int>& servers, bool byDemands = false);
-	void sortServerAndType(vector<int>& servers, vector<int>& serverTypes);
+	void sortServerAndType(vector<int>& servers, vector<int>& serverTypes, bool byDemands = true);
 	static bool sortByDemandsComparator(Node* o1, Node* o2) {
 		return (o1->demands < o2->demands);
 	}

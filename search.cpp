@@ -34,12 +34,14 @@ void Search::search() {
 void Search::addDropped() {
 	sortServers(droppedServers);
 	//reverse(droppedServers.begin(), droppedServers.end());
+	vector<int> tempServerTypes;
 	for (int i = 0; i < droppedServers.size(); i++) {
 		if (((float)clock() - graph->startTime) / CLOCKS_PER_SEC * 1000.0 > 70000) {
 			break;
 		}
 		int server = droppedServers[i];
 		bestServers.push_back(server);
+		tempServerTypes = bestServerTypes;
 		bestServerTypes.push_back(initialServerTypes[server]);
 		int newCost = modifyServerType(bestServers, bestServerTypes);
 		if (newCost < bestCost) {
@@ -48,7 +50,7 @@ void Search::addDropped() {
 		}
 		else {
 			bestServers.pop_back();
-			bestServerTypes.pop_back();
+			bestServerTypes = tempServerTypes;
 		}
 	}
 }
@@ -121,8 +123,8 @@ void Search::addServerAscent(vector<int>& candidates) {
 		}
 		if (nonImprove >= 10) {
 			preBreak = false;
-			index = 0;
-			startIndex = 0;
+			/*index = 0;
+			startIndex = 0;*/
 		}
 	}
 }
@@ -131,12 +133,9 @@ int Search::drop(vector<int>& servers, vector<int>& serverTypes) {
 	int dropIndex = startIndex;
 	int newCost;
 	int bestCost = getAllCost(servers, serverTypes);
-	//if (!firstDrop) {
-	//	sortServerAndType(servers, serverTypes);
-	//	reverse(servers.begin(), servers.end());
-	//	reverse(serverTypes.begin(), serverTypes.end());
-	//	//sortByActualOutput(servers, serverTypes);
-	//}
+	if (!firstDrop) {
+		sortServerAndType(servers, serverTypes, false);
+	}
 	bool changeStart = false;
 	while (dropIndex < servers.size() && ((float)clock() - graph->startTime) / CLOCKS_PER_SEC * 1000.0 < 88000) {
 		int droppedServer = servers[dropIndex];
@@ -155,7 +154,7 @@ int Search::drop(vector<int>& servers, vector<int>& serverTypes) {
 				droppedServers.push_back(droppedServer);
 			}
 			else {
-				if (!changeStart) {
+				if (!changeStart && graph->netVNum > 800) {
 					startIndex = dropIndex;
 					changeStart = true;
 				}
@@ -360,14 +359,18 @@ void Search::sortServers(vector<int>& servers, bool byDemands) {
 	}
 }
 
-void Search::sortServerAndType(vector<int>& servers, vector<int>& serverTypes) {
+void Search::sortServerAndType(vector<int>& servers, vector<int>& serverTypes, bool byDemands) {
 	unordered_map<int, int> serverToType;
 	for (int i = 0; i < servers.size(); i++) {
 		serverToType.insert({servers[i], serverTypes[i]});
 	}
-	sortServers(bestServers, true);
-	 /*sortServers(bestServers);
-	 reverse(bestServers.begin(), bestServers.end());*/
+	if (byDemands) {
+		sortServers(bestServers, true);
+	}
+	else {
+		sortServers(bestServers);
+		reverse(bestServers.begin(), bestServers.end());
+	}
 	for (int i = 0; i < servers.size(); i++) {
 		serverTypes[i] = serverToType[servers[i]];
 	}

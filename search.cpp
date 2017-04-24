@@ -25,7 +25,10 @@ void Search::search() {
 	firstDrop = false;
 	//reintroduceDroppedServers(droppedServers, serverIndex);
 	// cout << "reintroduce" << ((float)clock() - graph->startTime) / CLOCKS_PER_SEC * 1000.0 << "ms" << endl;
-	//addDropped();
+	if (graph->netVNum < 800) {
+	addDropped();
+	sortServerAndType(bestServers, bestServerTypes);
+	}
 	add();
 }
 
@@ -67,33 +70,33 @@ void Search::addServerAscent(vector<int>& candidates) {
 	while (index < candidates.size() && ((float)clock() - graph->startTime) / CLOCKS_PER_SEC * 1000.0 < 88000) {
 		int newServer = candidates[index];
 		index++;
-		if (find(bestServers.begin(), bestServers.end(), newServer) != bestServers.end()) {
+		if (find(tempServers.begin(), tempServers.end(), newServer) != tempServers.end()) {
 			continue;
 		}
-		bestServers.push_back(newServer);
-	    bestServerTypes.push_back(initialServerTypes[newServer]);
-		
-		bestCost = getAllCost(bestServers, bestServerTypes);
-		if (bestCost > tempCost) {
-			bestCost = drop(bestServers, bestServerTypes);
-			bestCost = modifyServerType(bestServers, bestServerTypes);
+		tempServers.push_back(newServer);
+		tempServerTypes.push_back(initialServerTypes[newServer]);
+
+		tempCost = getAllCost(tempServers, tempServerTypes);
+		if (tempCost > bestCost) {
+			tempCost = drop(tempServers, tempServerTypes);
+			tempCost = modifyServerType(tempServers, tempServerTypes);
 		}
-		
+
 		// ----- get actual output----- //
 		/*cout << "actual output: ";
 		for (int server : bestServers) {
-			cout << graph->adjVec[server].back()->cap << " ";
+		cout << graph->adjVec[server].back()->cap << " ";
 		}
 		cout << endl;*/
 		// ----- end -----//
 
-		if (bestCost < tempCost) {
-			tempServers = bestServers;
-			tempCost = bestCost;
-			tempServerTypes = bestServerTypes;
+		if (tempCost < bestCost) {
+			bestServers = tempServers;
+			bestCost = tempCost;
+			bestServerTypes = tempServerTypes;
 			cout << "new best servers location by adding neighbor " << newServer << "\n";
 			cout << "initial type " << initialServerTypes[newServer] << "\n";
-			cout << ((float)clock() - graph->startTime) / CLOCKS_PER_SEC * 1000.0 << "ms\n"; 
+			cout << ((float)clock() - graph->startTime) / CLOCKS_PER_SEC * 1000.0 << "ms\n";
 			vector<int> intialTypes;
 			for (auto server : bestServers) {
 				cout << server << " ";
@@ -104,17 +107,17 @@ void Search::addServerAscent(vector<int>& candidates) {
 				cout << server << " ";
 			}
 			cout << "\n";
-			for (auto server : bestServerTypes) {																																																																																																																																																																																																																																																																																																																																																																																																																											
+			for (auto server : bestServerTypes) {
 				cout << server << " ";
 			}
 			cout << "new best cost: " << bestCost << endl;
-			//index = 0;
+			index = 0;
 			nonImprove = 0;
 		}
 		else {
-			bestServers = tempServers;
-			bestCost = tempCost;
-			bestServerTypes = tempServerTypes;
+			tempServers = bestServers;
+			tempCost = bestCost;
+			tempServerTypes = bestServerTypes;
 			nonImprove++;
 		}
 		if (nonImprove >= 10) {
@@ -128,17 +131,17 @@ int Search::drop(vector<int>& servers, vector<int>& serverTypes) {
 	int newCost;
 	int bestCost = getAllCost(servers, serverTypes);
 	//if (!firstDrop) {
-	//	//sortServerAndType(servers, serverTypes);
-	//	/*reverse(servers.begin(), servers.end());
-	//	reverse(serverTypes.begin(), serverTypes.end())*/;
-	//	sortByActualOutput(servers, serverTypes);
+	//	sortServerAndType(servers, serverTypes);
+	//	reverse(servers.begin(), servers.end());
+	//	reverse(serverTypes.begin(), serverTypes.end());
+	//	//sortByActualOutput(servers, serverTypes);
 	//}
 	while (dropIndex < servers.size() && ((float)clock() - graph->startTime) / CLOCKS_PER_SEC * 1000.0 < 88000) {
 		int droppedServer = servers[dropIndex];
-		/*if (!firstDrop && (graph->adjVec[droppedServer].back()->cap > graph->servers[serverTypes.back()]->cap || !isDroppable(droppedServer))) {
+		if (!firstDrop && (graph->adjVec[droppedServer].back()->cap > graph->servers[serverTypes.back()]->cap || !isDroppable(droppedServer))) {
 			dropIndex++;
 			continue;
-		}*/
+		}
 		int droppedServerType = serverTypes[dropIndex];
 		servers.erase(servers.begin() + dropIndex);
 		serverTypes.erase(serverTypes.begin() + dropIndex);
@@ -150,7 +153,7 @@ int Search::drop(vector<int>& servers, vector<int>& serverTypes) {
 				droppedServers.push_back(droppedServer);
 			}
 			else {
-				if (preBreak) {
+				if (preBreak && graph->netVNum > 800) {
 					break;
 				}
 			}

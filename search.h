@@ -52,6 +52,8 @@ private:
 	void addServerAscent(vector<int>& candidates);
 	void sortByActualOutput(vector<int>& servers, vector<int>& serverTypes);
 	int drop(vector<int>& servers, vector<int>& serverTypes);
+	void decreaseServerType(vector<int>& servers, vector<int>& serverTypes);
+	void addServerType(vector<int>& servers, vector<int>& serverTypes);
 	void reintroduceDroppedServers(vector<int>& droppedServers, unordered_map<int, int> serverIndex);
 	int calPotentialOutput(Node*);
 	vector<int> getAllVertices();
@@ -62,8 +64,8 @@ private:
 		return (o1->demands < o2->demands);
 	}
 	bool sortByOutputComparator(Node* o1, Node* o2) {
-		return (double)calPotentialOutput(o1) / graph->vDeployCost[o1->vertexId] * 1.0 >(double) calPotentialOutput(o2) / graph->vDeployCost[o2->vertexId]*1.0;
-		//return calPotentialOutput(o1) > calPotentialOutput(o2);
+		//return (double)calPotentialOutput(o1) / graph->vDeployCost[o1->vertexId] * 1.0 >(double) calPotentialOutput(o2) / graph->vDeployCost[o2->vertexId]*1.0;
+		return calPotentialOutput(o1) > calPotentialOutput(o2);
 	}
 };
 

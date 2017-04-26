@@ -34,14 +34,12 @@ void Search::search() {
 void Search::addDropped() {
 	sortServers(droppedServers);
 	//reverse(droppedServers.begin(), droppedServers.end());
-	vector<int> tempServerTypes;
 	for (int i = 0; i < droppedServers.size(); i++) {
 		if (((float)clock() - graph->startTime) / CLOCKS_PER_SEC * 1000.0 > 70000) {
 			break;
 		}
 		int server = droppedServers[i];
 		bestServers.push_back(server);
-		tempServerTypes = bestServerTypes;
 		bestServerTypes.push_back(initialServerTypes[server]);
 		int newCost = modifyServerType(bestServers, bestServerTypes);
 		if (newCost < bestCost) {
@@ -50,7 +48,7 @@ void Search::addDropped() {
 		}
 		else {
 			bestServers.pop_back();
-			bestServerTypes = tempServerTypes;
+			bestServerTypes.pop_back();
 		}
 	}
 }
@@ -65,22 +63,23 @@ void Search::addServerAscent(vector<int>& candidates) {
 	vector<int> tempServers = bestServers;
 	vector<int> tempServerTypes = bestServerTypes;
 	int tempCost = bestCost;
-	
+
 	int index = 0;
 	int nonImprove = 0;
-	while (index < candidates.size() && ((float)clock() - graph->startTime) / CLOCKS_PER_SEC * 1000.0 < 88000) {
+	int threshold = 30;
+	while (index < candidates.size() && ((float)clock() - graph->startTime) / CLOCKS_PER_SEC * 1000.0 < 86000) {
 		int newServer = candidates[index];
 		index++;
-		if (find(tempServers.begin(), tempServers.end(), newServer) != tempServers.end()) {
+		if (find(bestServers.begin(), bestServers.end(), newServer) != bestServers.end()) {
 			continue;
 		}
-		tempServers.push_back(newServer);
-		tempServerTypes.push_back(initialServerTypes[newServer]);
+		bestServers.push_back(newServer);
+		bestServerTypes.push_back(initialServerTypes[newServer]);
 
-		tempCost = getAllCost(tempServers, tempServerTypes);
-		if (tempCost > bestCost) {
-			tempCost = drop(tempServers, tempServerTypes);
-			tempCost = modifyServerType(tempServers, tempServerTypes);
+		bestCost = getAllCost(bestServers, bestServerTypes);
+		if (bestCost > tempCost) {
+			bestCost = drop(bestServers, bestServerTypes);
+			bestCost = modifyServerType(bestServers, bestServerTypes);
 		}
 
 		// ----- get actual output----- //
@@ -90,11 +89,10 @@ void Search::addServerAscent(vector<int>& candidates) {
 		}
 		cout << endl;*/
 		// ----- end -----//
-
-		if (tempCost < bestCost) {
-			bestServers = tempServers;
-			bestCost = tempCost;
-			bestServerTypes = tempServerTypes;
+		if (bestCost < tempCost) {
+			tempServers = bestServers;
+			tempCost = bestCost;
+			tempServerTypes = bestServerTypes;
 			cout << "new best servers location by adding neighbor " << newServer << "\n";
 			cout << "initial type " << initialServerTypes[newServer] << "\n";
 			cout << ((float)clock() - graph->startTime) / CLOCKS_PER_SEC * 1000.0 << "ms\n";
@@ -116,18 +114,27 @@ void Search::addServerAscent(vector<int>& candidates) {
 			nonImprove = 0;
 		}
 		else {
-			tempServers = bestServers;
-			tempCost = bestCost;
-			tempServerTypes = bestServerTypes;
+			bestServers = tempServers;
+			bestCost = tempCost;
+			bestServerTypes = tempServerTypes;
 			nonImprove++;
 		}
-		if (nonImprove >= 10) {
+		if (nonImprove >= threshold) {
 			preBreak = false;
-			/*index = 0;
-			startIndex = 0;*/
+			decreaseServerType(bestServers, bestServerTypes);
+			if (tempCost >= bestCost) {
+				addServerType(bestServers, bestServerTypes);
+			}
+			tempCost = bestCost;
+			tempServerTypes = bestServerTypes;
+			startIndex = 0;
+			nonImprove = 0;
+			index = 0;
+			threshold += 10;
 		}
 	}
 }
+
 
 int Search::drop(vector<int>& servers, vector<int>& serverTypes) {
 	int dropIndex = startIndex;
@@ -137,7 +144,7 @@ int Search::drop(vector<int>& servers, vector<int>& serverTypes) {
 		sortServerAndType(servers, serverTypes, false);
 	}
 	bool changeStart = false;
-	while (dropIndex < servers.size() && ((float)clock() - graph->startTime) / CLOCKS_PER_SEC * 1000.0 < 88000) {
+	while (dropIndex < servers.size() && ((float)clock() - graph->startTime) / CLOCKS_PER_SEC * 1000.0 < 86000) {
 		int droppedServer = servers[dropIndex];
 		if (!firstDrop && (graph->adjVec[droppedServer].back()->cap > graph->servers[serverTypes.back()]->cap || !isDroppable(droppedServer))) {
 			dropIndex++;
@@ -148,7 +155,7 @@ int Search::drop(vector<int>& servers, vector<int>& serverTypes) {
 		serverTypes.erase(serverTypes.begin() + dropIndex);
 
 		newCost = getAllCost(servers, serverTypes);
-		if (newCost <= bestCost) {
+		if (newCost < bestCost) {
 			bestCost = newCost;
 			if (firstDrop) {
 				droppedServers.push_back(droppedServer);
@@ -248,6 +255,50 @@ int Search::modifyServerType(vector<int>& servers, vector<int>& serverTypes, int
 	return cost;
 }
 
+void Search::decreaseServerType(vector<int>& servers, vector<int>& serverTypes) {
+	int newCost;
+	int i = 0;
+	for (int i = bestServers.size() - 1; i > 0; i--) {
+		if (((float)clock() - graph->startTime) / CLOCKS_PER_SEC * 1000.0 > 86000) {
+			break;
+		}
+		if (bestServerTypes[i] == 0) {
+			continue;
+		}
+		bestServerTypes[i] = bestServerTypes[i] - 1;
+		newCost = getAllCost(bestServers, bestServerTypes);
+		if (newCost < bestCost) {
+			bestCost = newCost;
+			cout << "decrease type: " << bestCost << endl;
+		}
+		else {
+			bestServerTypes[i] = bestServerTypes[i] + 1;
+		}
+	}
+}
+
+void Search::addServerType(vector<int>& servers, vector<int>& serverTypes) {
+	int newCost;
+	int i = 0;
+	for (int i = 0; i < bestServers.size(); i++) {
+		if (((float)clock() - graph->startTime) / CLOCKS_PER_SEC * 1000.0 > 86000) {
+			break;
+		}
+		if (bestServerTypes[i] == typeCount - 1) {
+			continue;
+		}
+		bestServerTypes[i] = bestServerTypes[i] + 1;
+		newCost = getAllCost(bestServers, bestServerTypes);
+		if (newCost < bestCost) {
+			bestCost = newCost;
+			cout << "add type: " << bestCost << endl;
+		}
+		else {
+			bestServerTypes[i] = bestServerTypes[i] - 1;
+		}
+	}
+}
+
 void Search::initialize() {
 	initializeNodes();
 	initializeServerTypes();
@@ -273,7 +324,7 @@ void Search::initializeNodes() {
 }
 
 void Search::initializeServerTypes() {
-	 /*int potentialOutput;
+	/* int potentialOutput;
 	 for (int i = 0; i < graph->netVNum; i++) {
 	 	potentialOutput = calPotentialOutput(nodes[i]);
 	 	for (int j = 0; j < typeCount; j++) {
